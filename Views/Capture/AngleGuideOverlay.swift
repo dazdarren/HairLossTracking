@@ -8,15 +8,14 @@ struct AngleGuideOverlay: View {
             // Semi-transparent background
             Color.black.opacity(0.3)
 
-            // Guide shape
+            // Guide shape - centered and offset up slightly
             guideShape
                 .stroke(Color.white, lineWidth: 3)
                 .frame(width: guideSize.width, height: guideSize.height)
+                .offset(y: -40)
 
-            // Instructions at bottom
+            // Instructions at top
             VStack {
-                Spacer()
-
                 VStack(spacing: 8) {
                     Image(systemName: angle.iconName)
                         .font(.title)
@@ -31,7 +30,9 @@ struct AngleGuideOverlay: View {
                         .padding(.horizontal, 32)
                 }
                 .foregroundStyle(.white)
-                .padding(.bottom, 120)
+                .padding(.top, 100)
+
+                Spacer()
             }
         }
     }
@@ -47,18 +48,17 @@ struct AngleGuideOverlay: View {
         }
     }
 
-    @ViewBuilder
-    private var guideShape: some Shape {
+    private var guideShape: AnyShape {
         switch angle {
         case .front:
             // Oval for face
-            Ellipse()
+            AnyShape(Ellipse())
         case .crown:
             // Circle for top of head
-            Circle()
+            AnyShape(Circle())
         case .back:
             // Oval for back of head
-            Ellipse()
+            AnyShape(Ellipse())
         }
     }
 }

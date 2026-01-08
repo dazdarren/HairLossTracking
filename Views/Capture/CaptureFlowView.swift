@@ -17,6 +17,43 @@ struct CaptureFlowView: View {
         Double(capturedPhotos.count) / Double(PhotoAngle.allCases.count)
     }
 
+    private var isSimulator: Bool {
+        #if targetEnvironment(simulator)
+        return true
+        #else
+        return false
+        #endif
+    }
+
+    private func createPlaceholderImage(for angle: PhotoAngle) -> UIImage {
+        let size = CGSize(width: 400, height: 600)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { context in
+            // Background gradient
+            UIColor.systemGray5.setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+
+            // Draw angle label
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.alignment = .center
+
+            let attrs: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 24, weight: .bold),
+                .foregroundColor: UIColor.label,
+                .paragraphStyle: paragraphStyle
+            ]
+
+            let text = "\(angle.displayName)\n(Test Photo)"
+            let textRect = CGRect(x: 20, y: size.height / 2 - 30, width: size.width - 40, height: 80)
+            text.draw(in: textRect, withAttributes: attrs)
+
+            // Draw camera icon placeholder
+            let iconRect = CGRect(x: size.width / 2 - 40, y: size.height / 2 - 120, width: 80, height: 60)
+            UIColor.systemGray3.setFill()
+            UIBezierPath(roundedRect: iconRect, cornerRadius: 8).fill()
+        }
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -52,9 +89,31 @@ struct CaptureFlowView: View {
 
                     Spacer()
 
+                    // Simulator skip button
+                    #if targetEnvironment(simulator)
+                    Button {
+                        capturedPhotos[currentAngle] = createPlaceholderImage(for: currentAngle)
+                        advanceToNext()
+                    } label: {
+                        Text("Use Test Photo")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 10)
+                            .background(.ultraThinMaterial)
+                            .clipShape(Capsule())
+                    }
+                    .padding(.bottom, 12)
+                    #endif
+
                     // Capture button
                     Button {
+                        #if targetEnvironment(simulator)
+                        capturedPhotos[currentAngle] = createPlaceholderImage(for: currentAngle)
+                        advanceToNext()
+                        #else
                         triggerCapture()
+                        #endif
                     } label: {
                         ZStack {
                             Circle()

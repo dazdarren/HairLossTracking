@@ -4,24 +4,32 @@ struct DashboardView: View {
     @EnvironmentObject private var dataController: DataController
     @State private var showingCaptureFlow = false
 
+    private var isNewUser: Bool {
+        dataController.sessions.isEmpty
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    // Quick capture button
-                    captureButton
+                    if isNewUser {
+                        emptyStateView
+                    } else {
+                        // Quick capture button
+                        captureButton
 
-                    // Stats cards
-                    statsSection
+                        // Stats cards
+                        statsSection
 
-                    // Recent capture
-                    if let latestSession = dataController.sessions.first {
-                        recentCaptureSection(session: latestSession)
-                    }
+                        // Recent capture
+                        if let latestSession = dataController.sessions.first {
+                            recentCaptureSection(session: latestSession)
+                        }
 
-                    // Active treatments summary
-                    if !dataController.activeTreatments.isEmpty {
-                        treatmentsSummary
+                        // Active treatments summary
+                        if !dataController.activeTreatments.isEmpty {
+                            treatmentsSummary
+                        }
                     }
                 }
                 .padding()
@@ -30,6 +38,78 @@ struct DashboardView: View {
             .fullScreenCover(isPresented: $showingCaptureFlow) {
                 CaptureFlowView()
             }
+        }
+    }
+
+    private var emptyStateView: some View {
+        VStack(spacing: 32) {
+            Spacer()
+                .frame(height: 40)
+
+            // Icon
+            Image(systemName: "camera.viewfinder")
+                .font(.system(size: 72))
+                .foregroundStyle(Color.accentColor)
+
+            // Welcome text
+            VStack(spacing: 12) {
+                Text("Track Your Progress")
+                    .font(.title)
+                    .fontWeight(.bold)
+
+                Text("Take consistent photos to monitor your hair over time. We'll help you capture the same angles each session for accurate comparisons.")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+            }
+
+            // How it works
+            VStack(alignment: .leading, spacing: 16) {
+                Text("How it works")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                HowItWorksRow(
+                    icon: "camera.fill",
+                    title: "Take photos from 3 angles",
+                    description: "Front, crown, and back views"
+                )
+
+                HowItWorksRow(
+                    icon: "calendar",
+                    title: "Capture regularly",
+                    description: "Weekly or monthly for best results"
+                )
+
+                HowItWorksRow(
+                    icon: "arrow.left.arrow.right",
+                    title: "Compare over time",
+                    description: "See your progress side by side"
+                )
+            }
+            .padding()
+            .background(Color(.secondarySystemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+
+            // CTA button
+            Button {
+                showingCaptureFlow = true
+            } label: {
+                HStack {
+                    Image(systemName: "camera.fill")
+                        .font(.title3)
+                    Text("Take Your First Photos")
+                        .font(.headline)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
+                .background(Color.accentColor)
+                .foregroundStyle(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+            }
+
+            Spacer()
         }
     }
 
@@ -158,6 +238,30 @@ struct StatCard: View {
         .padding(.vertical, 16)
         .background(Color(.secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+struct HowItWorksRow: View {
+    let icon: String
+    let title: String
+    let description: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundStyle(Color.accentColor)
+                .frame(width: 32)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                Text(description)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 }
 
