@@ -5,6 +5,7 @@ struct TimelineView: View {
     @State private var selectedSession: CaptureSession?
     @State private var compareMode = false
     @State private var sessionsToCompare: [CaptureSession] = []
+    @State private var showingSlider = false
 
     var body: some View {
         NavigationStack {
@@ -18,6 +19,14 @@ struct TimelineView: View {
             .navigationTitle("Timeline")
             .toolbar {
                 if dataController.sessions.count >= 2 {
+                    ToolbarItem(placement: .secondaryAction) {
+                        Button {
+                            showingSlider = true
+                        } label: {
+                            Label("Scrub", systemImage: "slider.horizontal.3")
+                        }
+                    }
+
                     ToolbarItem(placement: .primaryAction) {
                         Button {
                             compareMode.toggle()
@@ -44,6 +53,9 @@ struct TimelineView: View {
                     )
                 }
             }
+            .fullScreenCover(isPresented: $showingSlider) {
+                TimelineSliderView(sessions: dataController.sessions)
+            }
         }
     }
 
@@ -65,7 +77,18 @@ struct TimelineView: View {
                         .padding(.top)
                 }
 
-                ForEach(dataController.sessions) { session in
+                ForEach(Array(dataController.sessions.enumerated()), id: \.element.id) { index, session in
+                    // Treatment markers between sessions
+                    let previousSession = index < dataController.sessions.count - 1
+                        ? dataController.sessions[index + 1]
+                        : nil
+
+                    TreatmentEventRow(
+                        treatments: dataController.treatments,
+                        referenceDate: session.date,
+                        previousDate: previousSession?.date
+                    )
+
                     SessionCard(
                         session: session,
                         isSelected: sessionsToCompare.contains { $0.id == session.id },

@@ -4,6 +4,7 @@ struct ComparisonView: View {
     let session1: CaptureSession
     let session2: CaptureSession
 
+    @EnvironmentObject private var dataController: DataController
     @Environment(\.dismiss) private var dismiss
     @State private var selectedAngle: PhotoAngle = .front
 
@@ -19,37 +20,53 @@ struct ComparisonView: View {
         Calendar.current.dateComponents([.day], from: olderSession.date, to: newerSession.date).day ?? 0
     }
 
+    private var relevantTreatments: [Treatment] {
+        dataController.treatments.filter { treatment in
+            let startedBefore = treatment.startDate < olderSession.date
+            let startedDuring = treatment.startDate >= olderSession.date && treatment.startDate <= newerSession.date
+            let stillActive = treatment.isActive || (treatment.endDate ?? Date()) > newerSession.date
+            return (startedBefore && stillActive) || startedDuring
+        }
+    }
+
     var body: some View {
         NavigationStack {
-            VStack(spacing: 16) {
-                // Time difference
-                Text("\(daysBetween) days apart")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .padding(.top)
+            ScrollView {
+                VStack(spacing: 16) {
+                    // Time difference
+                    Text("\(daysBetween) days apart")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .padding(.top)
 
-                // Side by side photos
-                HStack(spacing: 12) {
-                    photoView(for: olderSession, label: "Before")
-                    photoView(for: newerSession, label: "After")
-                }
-                .padding(.horizontal)
-
-                // Angle selector
-                Picker("Angle", selection: $selectedAngle) {
-                    ForEach(PhotoAngle.allCases, id: \.self) { angle in
-                        Text(angle.displayName).tag(angle)
+                    // Side by side photos
+                    HStack(spacing: 12) {
+                        photoView(for: olderSession, label: "Before")
+                        photoView(for: newerSession, label: "After")
                     }
+                    .padding(.horizontal)
+
+                    // Angle selector
+                    Picker("Angle", selection: $selectedAngle) {
+                        ForEach(PhotoAngle.allCases, id: \.self) { angle in
+                            Text(angle.displayName).tag(angle)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal)
+
+                    // Treatment context
+                    if !relevantTreatments.isEmpty {
+                        TreatmentContextView(
+                            treatments: relevantTreatments,
+                            olderDate: olderSession.date,
+                            newerDate: newerSession.date
+                        )
+                        .padding(.horizontal)
+                    }
+
+                    Spacer(minLength: 20)
                 }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-
-                // Swipe hint
-                Text("Swipe photos to compare")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                Spacer()
             }
             .navigationTitle("Compare")
             .navigationBarTitleDisplayMode(.inline)

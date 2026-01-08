@@ -3,9 +3,15 @@ import SwiftUI
 struct DashboardView: View {
     @EnvironmentObject private var dataController: DataController
     @State private var showingCaptureFlow = false
+    @State private var showingComparison = false
+    @State private var comparisonSessions: (CaptureSession, CaptureSession)?
 
     private var isNewUser: Bool {
         dataController.sessions.isEmpty
+    }
+
+    private var oneMonthAgoSession: CaptureSession? {
+        dataController.sessionFromDaysAgo(30, tolerance: 10)
     }
 
     var body: some View {
@@ -18,8 +24,30 @@ struct DashboardView: View {
                         // Quick capture button
                         captureButton
 
-                        // Stats cards
-                        statsSection
+                        // Streak card (if reminders enabled and has captures)
+                        if dataController.reminderSettings.isEnabled || dataController.reminderSettings.currentStreak > 0 {
+                            StreakCard(
+                                currentStreak: dataController.reminderSettings.currentStreak,
+                                longestStreak: dataController.reminderSettings.longestStreak,
+                                lastCaptureDate: dataController.sessions.first?.date
+                            )
+                        }
+
+                        // Quick comparison card (if sufficient history)
+                        if let beforeSession = oneMonthAgoSession,
+                           let afterSession = dataController.sessions.first {
+                            QuickComparisonCard(
+                                beforeSession: beforeSession,
+                                afterSession: afterSession,
+                                title: "1 Month Progress"
+                            ) {
+                                comparisonSessions = (beforeSession, afterSession)
+                                showingComparison = true
+                            }
+                        }
+
+                        // Progress stats
+                        ProgressStatsSection()
 
                         // Recent capture
                         if let latestSession = dataController.sessions.first {
@@ -37,6 +65,11 @@ struct DashboardView: View {
             .navigationTitle("Hair Loss Tracking")
             .fullScreenCover(isPresented: $showingCaptureFlow) {
                 CaptureFlowView()
+            }
+            .sheet(isPresented: $showingComparison) {
+                if let sessions = comparisonSessions {
+                    ComparisonView(session1: sessions.0, session2: sessions.1)
+                }
             }
         }
     }

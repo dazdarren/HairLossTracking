@@ -34,6 +34,12 @@ struct ContentView: View {
                     Label("Treatments", systemImage: "pills")
                 }
                 .tag(2)
+
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gear")
+                }
+                .tag(3)
         }
         .tint(.accentColor)
     }

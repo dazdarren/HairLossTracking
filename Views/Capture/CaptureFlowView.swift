@@ -202,6 +202,11 @@ struct CaptureFlowView: View {
 
         let session = CaptureSession(photos: photos)
         dataController.addSession(session)
+
+        // Update streak and reschedule reminder
+        dataController.updateStreakOnCapture()
+        NotificationService.shared.scheduleReminder(settings: dataController.reminderSettings)
+
         dismiss()
     }
 }

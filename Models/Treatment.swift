@@ -34,6 +34,26 @@ struct Treatment: Identifiable, Codable {
         let end = endDate ?? Date()
         return Calendar.current.dateComponents([.day], from: startDate, to: end).day ?? 0
     }
+
+    var durationDescription: String {
+        let days = durationDays
+        if days >= 365 {
+            let years = days / 365
+            let months = (days % 365) / 30
+            if months > 0 {
+                return "\(years)y \(months)mo"
+            }
+            return "\(years) year\(years > 1 ? "s" : "")"
+        } else if days >= 30 {
+            let months = days / 30
+            return "\(months) month\(months > 1 ? "s" : "")"
+        } else if days >= 7 {
+            let weeks = days / 7
+            return "\(weeks) week\(weeks > 1 ? "s" : "")"
+        } else {
+            return "\(days) day\(days != 1 ? "s" : "")"
+        }
+    }
 }
 
 // Common treatment presets
